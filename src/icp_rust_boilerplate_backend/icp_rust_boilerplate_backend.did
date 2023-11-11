@@ -1,0 +1,30 @@
+type EducationHistory = record {
+  id : nat64;
+  name : text;
+  create_at : nat64;
+  end_year : nat64;
+  user_id : text;
+  update_at : opt nat64;
+  start_year : nat64;
+  field_of_study : text;
+  degre : text;
+};
+type EducationHistoryPayload = record {
+  name : text;
+  end_year : nat64;
+  start_year : nat64;
+  field_of_study : text;
+  degre : text;
+};
+type Error = variant {
+  NotAuthorize : record { msg : text };
+  NotFound : record { msg : text };
+};
+type Result = variant { Ok : EducationHistory; Err : Error };
+type Result_1 = variant { Ok : vec EducationHistory; Err : Error };
+service : {
+  add_education_history : (EducationHistoryPayload) -> (Result);
+  delete_education_history : (nat64) -> (Result);
+  get_education_history : () -> (Result_1) query;
+  update_education_history : (nat64, EducationHistoryPayload) -> (Result);
+}
