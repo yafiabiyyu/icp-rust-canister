@@ -21,10 +21,38 @@ type Error = variant {
   NotFound : record { msg : text };
 };
 type Result = variant { Ok : EducationHistory; Err : Error };
-type Result_1 = variant { Ok : vec EducationHistory; Err : Error };
+type Result_1 = variant { Ok : WorkHistory; Err : Error };
+type Result_2 = variant { Ok : vec EducationHistory; Err : Error };
+type Result_3 = variant { Ok : vec WorkHistory; Err : Error };
+type WorkHistory = record {
+  id : nat64;
+  salary : nat64;
+  name : text;
+  description : text;
+  created_at : nat64;
+  end_year : opt nat64;
+  user_id : text;
+  update_at : opt nat64;
+  start_year : nat64;
+  position : text;
+};
+type WorkHistoryPayload = record {
+  salary : nat64;
+  name : text;
+  description : text;
+  created_at : nat64;
+  end_year : opt nat64;
+  update_at : opt nat64;
+  start_year : nat64;
+  position : text;
+};
 service : {
   add_education_history : (EducationHistoryPayload) -> (Result);
+  add_work_history : (WorkHistoryPayload) -> (Result_1);
   delete_education_history : (nat64) -> (Result);
-  get_education_history : () -> (Result_1) query;
+  delete_work_history : (nat64) -> (Result_1);
+  get_education_history : () -> (Result_2) query;
+  get_work_history : () -> (Result_3) query;
   update_education_history : (nat64, EducationHistoryPayload) -> (Result);
+  update_work_history : (nat64, WorkHistoryPayload) -> (Result_1);
 }
