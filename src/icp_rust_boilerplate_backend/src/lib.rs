@@ -65,6 +65,17 @@ struct Job {
     updated_at:Option<u64>
 }
 
+#[derive(candid::CandidType, Clone, Serialize, Deserialize, Default)]
+struct JobApplication {
+    id: u64,
+    job_id: u64,
+    user_id: String,
+    cover_latter: String,
+    resume: String,
+    portofolio: Option<String>,
+    applicaiton_date: u64
+}
+
 // Payload
 #[derive(candid::CandidType, Clone, Serialize, Deserialize, Default)]
 struct EducationHistoryPayload {
@@ -101,6 +112,14 @@ struct JobPayload {
     location:String,
     salary: String,
     description:String,
+}
+
+#[derive(candid::CandidType, Clone, Serialize, Deserialize, Default)]
+struct JobApplicationPayload {
+    job_id: u64,
+    cover_latter: String,
+    resume: String,
+    portofolio: Option<String>,
 }
 
 impl Storable for EducationHistory {
@@ -163,6 +182,21 @@ impl BoundedStorable for Job {
     const IS_FIXED_SIZE: bool = false;
 }
 
+impl Storable for JobApplication {
+    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+        Cow::Owned(Encode!(self).unwrap())
+    }
+
+    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
+        Decode!(bytes.as_ref(), Self).unwrap()
+    }
+}
+
+impl BoundedStorable for JobApplication {
+    const MAX_SIZE: u32 = 2048;
+    const IS_FIXED_SIZE: bool = false;
+}
+
 thread_local! {
     static EDUCATION_MEMORY: RefCell<MemoryManager<DefaultMemoryImpl>> = RefCell::new(
         MemoryManager::init(DefaultMemoryImpl::default())
@@ -221,6 +255,21 @@ thread_local! {
     static JOB_STORAGE: RefCell<StableBTreeMap<u64, Job, Memory>> = RefCell::new(
         StableBTreeMap::init(
             JOB_MEMORY.with(|m| m.borrow().get(MemoryId::new(7)))
+        )
+    );
+
+    static JOBAPPLICATION_MEMORY: RefCell<MemoryManager<DefaultMemoryImpl>> = RefCell::new(
+        MemoryManager::init(DefaultMemoryImpl::default())
+    );
+
+    static JOBAPPLICATION_COUNTER: RefCell<IdCell> = RefCell::new(
+        IdCell::init(JOBAPPLICATION_MEMORY.with(|m| m.borrow().get(MemoryId::new(8))), 0)
+        .expect("Connot create a counter")
+    );
+
+    static JOBAPPLICATION_STORAGE: RefCell<StableBTreeMap<u64, JobApplication, Memory>> = RefCell::new(
+        StableBTreeMap::init(
+            JOBAPPLICATION_MEMORY.with(|m| m.borrow().get(MemoryId::new(9)))
         )
     );
 }
@@ -600,6 +649,26 @@ fn delete_job_post(id:u64) -> Result<Job> {
             })
         }
     }
+}
+
+#[ic_cdk::update]
+fn apply_job(jobs_id:u64, payload:JobApplicationPayload) -> Result<JobApplication> {
+    let id = JOBAPPLICATION_COUNTER.with(|counter| {
+        let current_value = *counter.borrow().get();
+        counter.borrow_mut().set(current_value + 1)
+    }).expect("Cannot increment counter");
+
+    let application = JobApplication {
+        id:id,
+        job_id:jobs_id,
+        user_id:ic_cdk::caller().to_string(),
+        cover_latter: payload.cover_latter,
+        resume:payload.resume,
+        portofolio: payload.portofolio,
+        applicaiton_date: time()
+    };
+    JOBAPPLICATION_STORAGE.with(|service|service.borrow_mut().insert(id, application.clone()));
+    Ok(application)
 }
 
 // Helper function

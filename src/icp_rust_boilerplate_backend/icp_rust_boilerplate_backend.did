@@ -1,3 +1,20 @@
+type Company = record {
+  id : nat64;
+  admin : text;
+  name : text;
+  description : text;
+  created_at : nat64;
+  email : text;
+  address : text;
+  phone : text;
+};
+type CompanyPayload = record {
+  name : text;
+  description : text;
+  email : text;
+  address : text;
+  phone : text;
+};
 type EducationHistory = record {
   id : nat64;
   name : text;
@@ -20,10 +37,33 @@ type Error = variant {
   NotAuthorize : record { msg : text };
   NotFound : record { msg : text };
 };
+type Job = record {
+  id : nat64;
+  updated_at : opt nat64;
+  salary : text;
+  description : text;
+  created_at : nat64;
+  posted_by : text;
+  requirements : text;
+  position : text;
+  company_id : nat64;
+  location : text;
+};
+type JobPayload = record {
+  salary : text;
+  description : text;
+  requirements : text;
+  position : text;
+  location : text;
+};
 type Result = variant { Ok : EducationHistory; Err : Error };
 type Result_1 = variant { Ok : WorkHistory; Err : Error };
-type Result_2 = variant { Ok : vec EducationHistory; Err : Error };
-type Result_3 = variant { Ok : vec WorkHistory; Err : Error };
+type Result_2 = variant { Ok : Company; Err : Error };
+type Result_3 = variant { Ok : Job; Err : Error };
+type Result_4 = variant { Ok : vec Company; Err : Error };
+type Result_5 = variant { Ok : vec Job; Err : Error };
+type Result_6 = variant { Ok : vec EducationHistory; Err : Error };
+type Result_7 = variant { Ok : vec WorkHistory; Err : Error };
 type WorkHistory = record {
   id : nat64;
   salary : nat64;
@@ -40,19 +80,26 @@ type WorkHistoryPayload = record {
   salary : nat64;
   name : text;
   description : text;
-  created_at : nat64;
   end_year : opt nat64;
-  update_at : opt nat64;
   start_year : nat64;
   position : text;
 };
 service : {
   add_education_history : (EducationHistoryPayload) -> (Result);
   add_work_history : (WorkHistoryPayload) -> (Result_1);
+  delete_company : (nat64) -> (Result_2);
   delete_education_history : (nat64) -> (Result);
+  delete_job_post : (nat64) -> (Result_3);
   delete_work_history : (nat64) -> (Result_1);
-  get_education_history : () -> (Result_2) query;
-  get_work_history : () -> (Result_3) query;
+  get_all_company : () -> (Result_4) query;
+  get_all_job : () -> (Result_5) query;
+  get_education_history : () -> (Result_6) query;
+  get_job_by_company : (nat64) -> (Result_5) query;
+  get_work_history : () -> (Result_7) query;
+  post_new_job : (nat64, JobPayload) -> (Result_3);
+  register_company : (CompanyPayload) -> (Result_2);
+  update_company : (nat64, CompanyPayload) -> (Result_2);
   update_education_history : (nat64, EducationHistoryPayload) -> (Result);
+  update_job_post : (nat64, JobPayload) -> (Result_3);
   update_work_history : (nat64, WorkHistoryPayload) -> (Result_1);
 }
